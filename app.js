@@ -1,5 +1,5 @@
 // import express from "express";
-const { req, res } = require("express");
+// const { req, res } = require("express");
 const express = require("express");
 const cors = require("cors");
 // Importing body parser
@@ -15,6 +15,6 @@ app.use(cors());
 app.use("/products", productsRoutes); // path route
 
 // this is always at the bottom of the file
-app.listen(8000, () => {
+app.listen(8001, () => {
   console.log("Server is runinng good");
 }); // 8000 represent the port that the app is listening to
