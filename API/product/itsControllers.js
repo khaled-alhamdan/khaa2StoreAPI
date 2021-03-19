@@ -1,67 +1,81 @@
-// importing products list
-let products = require("../../productsData");
-// Importing slugify
-const slugify = require("slugify");
+// Connecting database
+const { Product } = require("../../db/models");
 
 // Get products list function
-exports.getProductsList = (_, res) => {
-  // If no request can put "_"
-  // {request, res} can be {tomato, apple}
-  // JS logic here
-  res.json(products);
+exports.getProductsList = async (_, res) => {
+  try {
+    const products = await Product.findAll({
+      // attributes: ["id", "name"], // Include these only
+      attributes: { exclude: ["createdAt", "updatedAt"] }, // exclude these only
+    });
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ error: "error fetching the list" });
+  }
 };
 
 // Get product by ID function
-exports.getProductsByID = (req, res) => {
-  const productId = req.params.productId;
-  const foundProduct = products.find((product) => product.id === +productId);
-  foundProduct
-    ? res.json(foundProduct)
-    : res.status(404).json({ error: "product was not found" });
+exports.getProductsByID = async (req, res) => {
+  const { productId } = req.params;
+  try {
+    const foundProduct = await Product.findByPk(productId);
+    if (foundProduct) {
+      res.status(200).json(foundProduct);
+    } else {
+      res.status(404).json({ error: "product was not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal servier error" });
+  }
 };
 
 // Delete function
-exports.deleteProduct = (req, res) => {
+exports.deleteProduct = async (req, res) => {
   // :id is the req.param
-  // const { productId } = req.params; // lines 23 and 24 are equivelent to each other
-  const productId = req.params.productId;
-  const foundProduct = products.find((product) => product.id === +productId);
-  if (foundProduct) {
-    products = products.filter((product) => product.id !== +productId);
-    // .json(`this is the new array after deleting the desired id`); // Will be displayed in raw
-    res.status(204).json(products);
-  } else {
-    // res.json(` This is the current array ${products}`); // Will be displayed in raw
-    res.status(404).json({ error: "product was not found" });
+  const { productId } = req.params; // lines 23 and 24 are equivelent to each other
+  // const productId = req.params.productId;
+  try {
+    const foundProduct = await Product.findByPk(productId);
+    if (foundProduct) {
+      await foundProduct.destroy();
+      res.status(204).end();
+    } else {
+      res.status(404).json({ error: "Product was not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "Internal servier error" });
   }
 };
 
 // Create function
-exports.productCreate = (req, res) => {
+exports.productCreate = async (req, res) => {
   try {
-    const id = products[products.length - 1].id + 1; // go in prodcts, specify the requested item using [], .id to give me the id of the requested item
-
-    const slug = slugify(req.body.name, { lower: true });
-    // const newProduct = { ...req.body, id, slug }; // in this form it will print everything in the added body first then the id and slug
-    const newProduct = { id, slug, ...req.body }; // in this form it will print the id and slug first then print whats in the added body
-    products.push(newProduct);
+    const newProduct = await Product.create(req.body); // in this form it will print the id and slug first then print whats in the added body
     res.status(201).json(newProduct);
   } catch (error) {
     // 201: created
-    res.status(404).json({ error: "product could not be created" });
+    res.status(500).json({ error: "product could not be created" });
   }
+  // const id = products[products.length - 1].id + 1; // go in prodcts, specify the requested item using [], .id to give me the id of the requested item
+
+  // products.push(newProduct);
+  // const slug = slugify(req.body.name, { lower: true });
 };
 
 // Update function
-exports.updateProduct = (req, res) => {
+exports.updateProduct = async (req, res) => {
   // const productId = req.params.productId;
   const { productId } = req.params;
-  const foundProduct = products.find((product) => product.id === +productId);
-  if (foundProduct) {
-    for (const eachItemInsideTheObject in req.body)
-      foundProduct[eachItemInsideTheObject] = req.body[eachItemInsideTheObject];
-    res.status(204).json(foundProduct); // 204: update was received
-  } else {
-    res.status(404).json({ error: "product was not found" });
+
+  try {
+    const foundProduct = await Product.findByPk(productId);
+    if (foundProduct) {
+      await foundProduct.update(req.body);
+      res.status(204).end(); // 204: update was received
+    } else {
+      res.status(404).json({ error: "Product was not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ error: "product could not be updated" });
   }
 };
