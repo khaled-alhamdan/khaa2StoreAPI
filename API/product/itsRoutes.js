@@ -1,12 +1,19 @@
+// Importing express
 const express = require("express");
+// Imorting router
 const router = express.Router();
-// Importing the create function from product Controller
+// Importing passport
+const passport = require("passport");
+// Importing multer middlewear
+const upload = require("../../middleweres/multer");
+
+// Importing products controllers
 const {
-  productCreate,
   getProductsList,
   deleteProduct,
   updateProduct,
   getProductsByID,
+  productCreate,
 } = require("./itsControllers");
 
 // Get products list
@@ -18,10 +25,15 @@ router.get("/:productId", getProductsByID);
 // Delete a product
 router.delete("/:productId", deleteProduct);
 
-// Add-Create a product
-router.post("/", productCreate);
-
 // Update a product
-router.put("/:productId", updateProduct);
+router.put(
+  "/:productId",
+  upload.single("image"),
+  // passport.authenticate("jwt", { session: false }),
+  updateProduct
+);
+
+// Create product
+router.post("/", upload.single("image"), productCreate);
 
 module.exports = router;

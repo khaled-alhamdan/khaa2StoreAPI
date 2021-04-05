@@ -25,6 +25,10 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       // allowNull: false,
     },
+    // storeName: {
+    //   type: DataTypes.STRING,
+    //   allowNull: false,
+    // },
   });
   SequelizeSlugify.slugifyModel(Product, {
     source: ["name"],
